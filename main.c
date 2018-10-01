@@ -37,7 +37,9 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
     }
     value = strtok(linePtr + 1, " \t\n");
     if ((fd = open(value,
-      O_CREAT | O_WRONLY | (append == NULL ? 0 : O_APPEND), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) < 0) {
+      O_CREAT | O_WRONLY | (append == NULL ? 0 : O_APPEND),
+      S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) < 0)
+    {
       printf("Could not open file... ERR: %d\n", fd);
       free(lineCopy);
       return -1;
