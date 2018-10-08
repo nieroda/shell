@@ -1,4 +1,4 @@
-CFLAGS = -Iinclude
+CFLAGS = -Iinclude -std=gnu99
 CC = gcc
 
 all: pipe_demo.x lobo_shell.x
