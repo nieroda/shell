@@ -1,5 +1,5 @@
 # lobo-shell
-An assignment for a simple shell for CS450
+A simple shell written in C that supports redirection and piping
 
 ## Group Members
-Write the names of your group members here
+Nathan Kamm, Tyler Gearing, Ezio Ballarin
