@@ -1,18 +1,23 @@
 #include <stdio.h>
-#include <sys/wait.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
+
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include "constants.h"
 #include "parsetools.h"
 
 
 int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 
-  char *linePtr = NULL; char *value; int fd = 0;
+  char *linePtr = NULL;
+  char *value;
+  int fd = 0;
   char *lineCopy = malloc(strlen(line) + 1);
   strcpy(lineCopy, line);
 
