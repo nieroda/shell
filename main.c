@@ -4,11 +4,9 @@
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
-
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
 #include "constants.h"
 #include "parsetools.h"
 
