@@ -1,4 +1,4 @@
-CFLAGS = -Iinclude -std=c99
+CFLAGS = -Iinclude -std=c99 -Wall -Werror
 CC = gcc
 
 all:  lobo_shell.x
