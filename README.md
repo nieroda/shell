@@ -38,3 +38,8 @@ wc -l < inputfile >> outputfile
 ```
 tr "A-Z" "a-z" < wcExample.cpp | tr -cs "a-z" '\012' | sort | uniq -c | sort -nr | head -1 > output.txt
 ```
+
+To clear the output files and executables use
+```
+make clean
+```
