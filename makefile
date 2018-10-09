@@ -13,7 +13,7 @@ all:  lobo_shell.x
 #	$(CC) -g -o $@ $^
 
 lobo_shell.x: main.o parsetools.o
-	$(CC) -g -o $@ $^
+	$(CC) $(CFLAGS) -g -o $@ $^
 
 # $< is the first item after the colon (main.c here)
 main.o: main.c include/parsetools.h include/constants.h
