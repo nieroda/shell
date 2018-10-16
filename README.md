@@ -1,5 +1,5 @@
 # lobo-shell
-[![Build Status](https://travis-ci.com/ezquire/shell.svg?token=xPzuzD2CR5yXW6oamq47&branch=master)](https://travis-ci.com/ezquire/shell)
+[![Build Status](https://travis-ci.com/ezquire/Simple-Shell.svg?token=xPzuzD2CR5yXW6oamq47&branch=master)](https://travis-ci.com/ezquire/Simple-Shell)
 
 A simple shell written in C that supports redirection and piping
 
