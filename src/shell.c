@@ -1,21 +1,34 @@
+/* 
+ * If using the -std-c99 option, then features.h (which is implicitly included
+ * by unistd.h) will NOT default to setting _BSD_SOURCE in such a way that the
+ * prototype for gethostname() gets included. You force it with your own 
+ * feature macro definition (as below). 
+ */
+
+#define _DEFAULT_SOURCE
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
+#include <linux/limits.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "constants.h"
 #include "parsetools.h"
 
+void shellPrompt();
+
+char* user; 
+char host[_SC_HOST_NAME_MAX];
+char cwd[PATH_MAX];
 
 int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 
-  char *linePtr = NULL;
-  char *value;
-  int fd = 0;
+  char *linePtr = NULL; char *value; int fd = 0;
   char *lineCopy = malloc(strlen(line) + 1);
   strcpy(lineCopy, line);
 
@@ -61,7 +74,9 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 
 void runProcess(char *line, int pipeIn, int pipeOut, int pfd[][2], int len) {
 
-  if (fork() == 0) {
+  pid_t pid = fork();
+
+  if (pid == 0) {
 
     int redirect = parseRedirection(line, &pipeIn, &pipeOut);
     if (redirect == -1) return;
@@ -88,7 +103,20 @@ void runProcess(char *line, int pipeIn, int pipeOut, int pfd[][2], int len) {
       close(pfd[i][1]);
     }
     execvp(*line_words, line_words);
+  } else {
+    int status;
+    printf("waiting for %s to finish\n", line);
+    waitpid(pid, &status, 0); 
   }
+
+}
+
+void shellPrompt() {
+    user = getlogin();
+    gethostname(host, _SC_HOST_NAME_MAX);
+    getcwd(cwd, PATH_MAX);
+
+    fprintf(stdout, "[%s@%s %s]# ", user, host, cwd); 
 }
 
 int main() {
@@ -98,9 +126,12 @@ int main() {
     // holds separated words based on whitespace
     char* line_words[MAX_LINE_WORDS + 1];
 
+    shellPrompt();
+
     // Loop until user hits Ctrl-D (end of input)
     // or some other input error occurs
     while( fgets(line, MAX_LINE_CHARS, stdin) ) {
+
         int num_words = split_cmd_line(line, line_words, "|");
         int pfd[num_words - 1][2];
         for (int i = 0; i < num_words - 1; i++) {
@@ -116,7 +147,10 @@ int main() {
         for (int i = 0; i < num_words - 1; i++) {
           close(pfd[i][0]);
           close(pfd[i][1]);
+          printf("closed %d\n", i);
         }
+
+        shellPrompt();
     }
 
     return 0;
