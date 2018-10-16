@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
@@ -9,7 +10,6 @@
 #include <sys/wait.h>
 #include "constants.h"
 #include "parsetools.h"
-
 
 int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 
@@ -59,6 +59,46 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
   return 0;
 }
 
+void parseFileDescript(char *line) {
+  int fdIn;
+  int fdOut;
+  char *linePtr = NULL;
+  char *lineCopy = malloc(strlen(line) + 1);
+
+  strcpy(lineCopy, line);
+  if ((linePtr = strstr(lineCopy, "1>&2")) != NULL) {
+	  fdIn = (uintptr_t)strtok(linePtr, ">");
+	  fdOut = (uintptr_t)strtok(linePtr + 3, " \t\n");
+ 	  printf("fdIn: %d\n", fdIn);
+	  printf("fdOut: %d\n", fdOut);
+  }
+  /*
+  strcpy(lineCopy, line);
+  if ((linePtr = strstr(lineCopy, ">")) != NULL) {
+    char *append = NULL;
+    if ((append = strstr(lineCopy, ">>")) != NULL) {
+      linePtr = append + 1;
+    }
+    value = strtok(linePtr + 1, " \t\n");
+    if ((fd = open(value,
+      O_CREAT | O_WRONLY | (append == NULL ? 0 : O_APPEND),
+      S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) < 0)
+    {
+      printf("Could not open file... ERR: %d\n", fd);
+      free(lineCopy);
+      return -1;
+    }
+    dup2(fd, 1);
+    close(fd);
+    *pipeOut = -1;
+  }
+
+  free(lineCopy);
+  if (fd != 0) {
+    return 1;
+	}*/
+}
+
 void runProcess(char *line, int pipeIn, int pipeOut, int pfd[][2], int len) {
 
   if (fork() == 0) {
@@ -101,6 +141,7 @@ int main() {
     // Loop until user hits Ctrl-D (end of input)
     // or some other input error occurs
     while( fgets(line, MAX_LINE_CHARS, stdin) ) {
+		parseFileDescript(line); // testing file descript
         int num_words = split_cmd_line(line, line_words, "|");
         int pfd[num_words - 1][2];
         for (int i = 0; i < num_words - 1; i++) {
@@ -117,7 +158,8 @@ int main() {
           close(pfd[i][0]);
           close(pfd[i][1]);
         }
-    }
+		
+	}
 
     return 0;
 }
