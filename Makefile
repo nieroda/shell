@@ -1,4 +1,4 @@
-CFLAGS = -g -Iinclude -std=c99 -Wall -Werror -pedantic
+CFLAGS = -g -Iinclude -std=c99 -Wall -Werror -pedantic -D EXTRACREDIT
 CC = gcc
 
 # this says go find all the files in src/ with .c as an extension and put

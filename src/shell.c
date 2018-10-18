@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <ctype.h>
 #include "constants.h"
 #include "parsetools.h"
 
@@ -14,8 +15,15 @@
 int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 
   char *linePtr = NULL;
-  char *value;
+  char *value = NULL;
   int fd = 0;
+
+#ifdef EXTRACREDIT
+  char *fileName = NULL;
+  int input_fd = -1;
+  int output_fd = -1;
+#endif
+
   char *lineCopy = malloc(strlen(line) + 1);
   strcpy(lineCopy, line);
 
@@ -38,7 +46,23 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
     if ((append = strstr(lineCopy, ">>")) != NULL) {
       linePtr = append + 1;
     }
+#ifdef EXTRACREDIT
+    else {
+      input_fd = (int) *(linePtr - 1) - '0';
+      if (isalpha(*(linePtr + 1))/* && (*(linePtr + 1) != '&')*/)
+        fileName = strtok(linePtr + 1, " \t\n");
+      else
+        output_fd = (int) *(linePtr + 2) - '0';
+    }
+
+    if (output_fd != -1 && input_fd != -1) {
+      goto done;
+    }
+
+    value = fileName != NULL ? fileName : strtok(linePtr + 1, " \t\n");
+#else
     value = strtok(linePtr + 1, " \t\n");
+#endif
     if ((fd = open(value,
       O_CREAT | O_WRONLY | (append == NULL ? 0 : O_APPEND),
       S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) < 0)
@@ -47,16 +71,23 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
       free(lineCopy);
       return -1;
     }
+#ifdef EXTRACREDIT
+    dup2(fd, input_fd == -1 ? 1 : input_fd);
+#else
     dup2(fd, 1);
+#endif
     close(fd);
     *pipeOut = -1;
   }
-
   free(lineCopy);
-  if (fd != 0) {
-    return 1;
-  }
-  return 0;
+
+  return fd != 0 ? 1 : 0;
+
+done:
+  free(lineCopy);
+  dup2(input_fd, output_fd);
+  //close(input_fd);
+  return 2;
 }
 
 void runProcess(char *line, int pipeIn, int pipeOut, int pfd[][2], int len) {
@@ -67,9 +98,11 @@ void runProcess(char *line, int pipeIn, int pipeOut, int pfd[][2], int len) {
     if (redirect == -1) return;
     if (redirect == 1) {
       line = strtok(line, "<>");
+    } else if (redirect == 2) {
+      line = strtok(line, "<>0123456789");
     }
-    //max 10 words ¯\_(ツ)_/¯
-    char* line_words[10];
+    //max 100 words ¯\_(ツ)_/¯...wtf
+    char* line_words[100];
     split_cmd_line(line, line_words, " \t\n");
 
     if (pipeIn != -1) {
@@ -93,13 +126,9 @@ void runProcess(char *line, int pipeIn, int pipeOut, int pfd[][2], int len) {
 
 int main() {
 
-    // Buffer for reading one line of input
     char line[MAX_LINE_CHARS];
-    // holds separated words based on whitespace
     char* line_words[MAX_LINE_WORDS + 1];
 
-    // Loop until user hits Ctrl-D (end of input)
-    // or some other input error occurs
     while( fgets(line, MAX_LINE_CHARS, stdin) ) {
         int num_words = split_cmd_line(line, line_words, "|");
         int pfd[num_words - 1][2];
