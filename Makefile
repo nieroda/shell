@@ -23,4 +23,4 @@ clean:
 # resolution conflicts in case you want to name something "clean" or "all"
 .PHONY: all clean
 
-# slightly cleaner syntax than gondree's :D
+# slightly cleaner syntax than gondree's :D 
