@@ -83,12 +83,13 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
   free(lineCopy);
 
   return fd != 0 ? 1 : 0;
-
+#ifdef EXTRACREDIT
 done:
   free(lineCopy);
   dup2(input_fd, output_fd);
   //close(input_fd);
   return 2;
+#endif
 }
 
 void runProcess(char *line, int pipeIn, int pipeOut, int pfd[][2], int len) {
