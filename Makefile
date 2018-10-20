@@ -1,4 +1,4 @@
-CFLAGS = -g -Iinclude -std=c99 -Wall -Werror -pedantic -D EXTRACREDIT
+CFLAGS = -g -Iinclude -std=c99 -Wall -Werror -pedantic
 CC = gcc
 
 # this says go find all the files in src/ with .c as an extension and put
@@ -10,10 +10,13 @@ srcs = $(wildcard src/*.c)
 # in a string separated by spaces
 objs = $(srcs:.c=.o)
 
-all:  lobo_shell.x
+all:  lobo_shell.x ec.x
 
 lobo_shell.x: $(objs)
 	$(CC) $(CFLAGS) -o $@ $^
+
+ec.x: $(objs)
+	$(CC) $(CFLAGS) -o $@ $^ -D EXTRACREDIT
 
 clean:
 	rm -f *.x *.o *~
