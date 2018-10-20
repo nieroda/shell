@@ -15,12 +15,16 @@ To build the shell, run
 make
 ```
 
-Then you can run the shell from the current directory
+Then you can run the shell from the current directory using the two executables
 ```
-./lobo-shell.x
+./lobo-shell.x - runs the shell with basic functionality
+./ec.x - runs the shell with extended functionality
 ```
 
-The shell supports some basic commands like
+lobo-shell.x
+-----
+
+lobo-shell.x supports some basic commands like
 ```
 ps -u yourusername
 ```
@@ -36,8 +40,22 @@ who > outputfile
 wc -l < inputfile >> outputfile
 ```
 ```
-tr "A-Z" "a-z" < wcExample.cpp | tr -cs "a-z" '\012' | sort | uniq -c | sort -nr | head -1 > output.txt
+tr "A-Z" "a-z" < [file-name] | tr -cs "a-z" '\012' | sort | uniq -c | sort -nr | head -1 > output.txt
 ```
+
+ec.x
+-----
+
+ec.x supports additional commands as well as commands in all the forms listed under lobo-shell.x
+```
+1>&2
+```
+```
+1>&[file-name]
+```
+
+Misc
+-----
 
 To clear the output files and executables use
 ```
