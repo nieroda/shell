@@ -35,23 +35,29 @@ who | wc -l
 ls /usr/bin | head -10 | tail -5
 ```
 ```
-wc -l < inputfile
-who > outputfile
-wc -l < inputfile >> outputfile
+wc -l < [inputfile]
+who > [outputfile]
+wc -l < [inputfile] >> [outputfile]
 ```
 ```
-tr "A-Z" "a-z" < [file-name] | tr -cs "a-z" '\012' | sort | uniq -c | sort -nr | head -1 > output.txt
+tr "A-Z" "a-z" < [inputfile] | tr -cs "a-z" '\012' | sort | uniq -c | sort -nr | head -1 > [outputfile]
 ```
 
 ec.x
 -----
 
-ec.x supports additional commands as well as commands in all the forms listed under lobo-shell.x
+ec.x supports commands in this form, as well as commands in all the forms listed under lobo-shell.x
 ```
-1>&2
+who 1>[filename]
 ```
 ```
-1>&[file-name]
+who 2>[filename]
+```
+```
+who 2>[filename] 1>&2
+```
+```
+who > [filename] 2>&1
 ```
 
 Misc
