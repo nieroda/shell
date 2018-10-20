@@ -11,6 +11,7 @@
 #include "constants.h"
 #include "parsetools.h"
 
+// Checking commit
 
 int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 
