@@ -1,19 +1,39 @@
-#!/bin/bash
+#!/bin/sh
 
 echo "Testing Basic: "
+echo "Test 1"
+ps -u tgearing
+who | wc -l > test2.ok
+ls /usr/bin | head -10 | tail -5 > test3.ok
+who > test4.ok
+wc -l < test.txt >> test5.ok
+tr "A-Z" "a-z" < ./src/shell.c | tr -cs "a-z" '\012' | sort | uniq -c | sort -nr | head -1 > test6.ok
+
 ./lobo_shell.x << 'EOF'
 ps -u tgearing
-who | wc -l
-ls /usr/bin | head -10 | tail -5
-wc -l < inputfile
-who > out1
-wc -l < inputfile >> out2
-tr "A-Z" "a-z" < ./src/shell.c | tr -cs "a-z" '\012' | sort | uniq -c | sort -nr | head -1 > out3
+who | wc -l > test2.out
+ls /usr/bin | head -10 | tail -5 > test3.out
+who > test4.out
+wc -l < test.txt >> test5.out
+tr "A-Z" "a-z" < ./src/shell.c | tr -cs "a-z" '\012' | sort | uniq -c | sort -nr | head -1 > test6.out
 EOF
 
 sleep .05
-echo "^D"
+echo -e "\04"
 
+for i in {2..6}
+do
+	diff -u test$i.ok test$i.out
+	echo "Test" $i
+	echo "expected output:"
+	hexdump -C test$i.ok
+	echo "actual ouput:"
+	hexdump -C test$i.out
+	echo -en "\n"
+done
+
+: '
+ 
 echo "Testing Extra Credit: "
 ./ec.x << 'EOF'
 ps -u tgearing
@@ -21,3 +41,4 @@ EOF
 
 sleep .05
 echo "^D"
+'

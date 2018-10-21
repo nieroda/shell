@@ -3,8 +3,6 @@
 #include "constants.h"
 #include "parsetools.h"
 
-
-
 // Parse a command line into a list of words,
 //    separated by whitespace.
 // Returns the number of words
