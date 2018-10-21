@@ -1,0 +1,23 @@
+#!/bin/bash
+
+echo "Testing Basic: "
+./lobo_shell.x << 'EOF'
+ps -u tgearing
+who | wc -l
+ls /usr/bin | head -10 | tail -5
+wc -l < inputfile
+who > out1
+wc -l < inputfile >> out2
+tr "A-Z" "a-z" < ./src/shell.c | tr -cs "a-z" '\012' | sort | uniq -c | sort -nr | head -1 > out3
+EOF
+
+sleep .05
+echo "^D"
+
+echo "Testing Extra Credit: "
+./ec.x << 'EOF'
+ps -u tgearing
+EOF
+
+sleep .05
+echo "^D"

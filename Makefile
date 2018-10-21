@@ -14,6 +14,6 @@ ec.x: $(objs)
 	$(CC) $(CFLAGS) -o $@ $^ -D EXTRACREDIT
 
 clean:
-	rm -f *.x *.o *~
+	rm -f *.x *.o *~ out*
 
 .PHONY: all clean
