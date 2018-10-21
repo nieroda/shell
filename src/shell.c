@@ -51,11 +51,11 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
     else {
       input_fd = (int) *(linePtr - 1) - '0';
       if (isalpha(*(linePtr + 1))/* && (*(linePtr + 1) != '&')*/)
-        fileName = strtok(linePtr + 1, " \t\n");
-      else
-        output_fd = (int) *(linePtr + 2) - '0';
+		  fileName = strtok(linePtr + 1, " \t\n");
+	  else
+		  output_fd = (int) *(linePtr + 2) - '0';
     }
-
+	
     if (output_fd != -1 && input_fd != -1) {
       goto done;
     }
