@@ -1,3 +1,28 @@
+/*
+ * shell.c
+ * The core of the shell application.
+ */
+
+/*
+  MIT License
+  Copyright (c) 2018 Tyler Gearing, Nathan Kamm, Ezio Ballarin
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -11,12 +36,57 @@
 #include "constants.h"
 #include "parsetools.h"
 
-void syserror(const char *s)
-{
-    extern int errno;
-    fprintf(stderr, "%s\n", s);
-    fprintf(stderr, " (%s)\n", strerror(errno));
-    exit(1);
+/* 
+ * If using the -std-c99 option, then features.h (which is implicitly included
+ * by unistd.h) will NOT default to setting _BSD_SOURCE in such a way that the
+ * prototype for gethostname() gets included. You force it with your own 
+ * feature macro definition (as below). 
+ */
+#define _DEFAULT_SOURCE
+
+// Function Prototypes
+void syserror(const char*);
+int parseRedirection(char*, int*, int*);
+void runProcess(char*, int, int, int (*)[2], int);
+
+int main() {
+	
+    char line[MAX_LINE_CHARS];
+    char* line_words[MAX_LINE_WORDS + 1];
+
+    while( fgets(line, MAX_LINE_CHARS, stdin) ) {
+
+		// Hacker Lvl 3000, not sophisticated but it works
+		for(int i = 0; i < strlen(line); ++i) {
+			if(line[i] == '\"' || line[i] == '\'')
+				line[i] = ' ';
+			}
+		
+		int num_words = split_cmd_line(line, line_words, "|");
+        int pfd[num_words - 1][2];
+        for (int i = 0; i < num_words - 1; i++) {
+			if (pipe(pfd[i]) == -1) {printf("Error creating pipe\n");};
+        }
+
+        for (int i = 0; i < num_words; i++) {
+			int pipeIn = i == 0 ? - 1 : i - 1;
+			int pipeOut = i == num_words - 1 ? -1 : i;
+			runProcess(line_words[i], pipeIn, pipeOut, pfd, num_words - 1);
+        }
+
+		for (int i = 0; i < num_words - 1; i++) {
+			if(close(pfd[i][0]) == -1 || close(pfd[i][1]) == -1)
+				syserror("Could not close file descriptors");
+		}
+	}
+	return 0;
+}
+
+void syserror(const char *s) {
+	extern int errno;
+	fprintf(stderr, "%s\n", s);
+	fprintf(stderr, " (%s)\n", strerror(errno));
+	exit(1);
 }
 
 int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
@@ -126,55 +196,16 @@ void runProcess(char *line, int pipeIn, int pipeOut, int pfd[][2], int len) {
 
 		if (pipeOut != -1) {
 			dup2(pfd[pipeOut][1], 1);
-			//close(pfd[pipeOut][0]);
 			if(close(pfd[pipeOut][0]) == -1)
 				syserror("Could not close file descriptor");
 		}
 
 		for (int i = 0; i < len; i++) {
 			if (i == pipeIn || i == pipeOut) continue;
-			//close(pfd[i][0]);
-			//close(pfd[i][1]);
 			if(close(pfd[i][0]) == -1 || close(pfd[i][1]) == -1)
 				syserror("Could not close file descriptors");
 		}
 		execvp(*line_words, line_words);
 		syserror( "Could not exec command line" );
 	}
-}
-
-int main() {
-	
-    char line[MAX_LINE_CHARS];
-    char* line_words[MAX_LINE_WORDS + 1];
-
-    while( fgets(line, MAX_LINE_CHARS, stdin) ) {
-
-		// Hacker Lvl 3000, not sophisticated but it works
-		for(int i = 0; i < strlen(line); ++i) {
-			if(line[i] == '\"' || line[i] == '\'')
-				line[i] = ' ';
-			}
-		
-		int num_words = split_cmd_line(line, line_words, "|");
-        int pfd[num_words - 1][2];
-        for (int i = 0; i < num_words - 1; i++) {
-			if (pipe(pfd[i]) == -1) {printf("Error creating pipe\n");};
-        }
-
-        for (int i = 0; i < num_words; i++) {
-			int pipeIn = i == 0 ? - 1 : i - 1;
-			int pipeOut = i == num_words - 1 ? -1 : i;
-			runProcess(line_words[i], pipeIn, pipeOut, pfd, num_words - 1);
-        }
-
-        for (int i = 0; i < num_words - 1; i++) {
-			//close(pfd[i][0]);
-			//close(pfd[i][1]);
-			if(close(pfd[i][0]) == -1 || close(pfd[i][1]) == -1)
-				syserror("Could not close file descriptors");
-        }
-    }
-
-    return 0;
 }
