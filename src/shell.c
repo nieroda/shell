@@ -11,6 +11,14 @@
 #include "constants.h"
 #include "parsetools.h"
 
+void syserror(const char *s)
+{
+    extern int errno;
+    fprintf(stderr, "%s\n", s);
+    fprintf(stderr, " (%s)\n", strerror(errno));
+    exit(1);
+}
+
 int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 
 	char *linePtr = NULL;
@@ -27,8 +35,8 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 	strcpy(lineCopy, line);
 
 	if ((linePtr = strstr(lineCopy, "<")) != NULL) {
-		value = strtok(linePtr + 1, " \t\n");
 
+		value = strtok(linePtr + 1, " \t\n");
 
 		if ((fd = open(value, O_RDONLY)) < 0) {
 			printf("Could not open file... ERR: %d\n", fd);
@@ -36,7 +44,8 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 			return -1;
 		}
 		dup2(fd, 0);
-		close(fd);
+		if(close(fd) == -1)
+			syserror("Could not close file descriptor");
 		*pipeIn = -1;
 	}
 
@@ -76,7 +85,8 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 #else
 		dup2(fd, 1);
 #endif
-		close(fd);
+ 		if(close(fd) == -1)
+			syserror("Could not close file descriptor");
 		*pipeOut = -1;
 	}
 	free(lineCopy);
@@ -87,6 +97,8 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 	free(lineCopy);
 	dup2(input_fd, output_fd);
 	//close(input_fd);
+	//if(close(fd) == -1)
+	//	syserror("Could not close file descriptor");
 	return 2;
 #endif
 }
@@ -108,20 +120,26 @@ void runProcess(char *line, int pipeIn, int pipeOut, int pfd[][2], int len) {
 
 		if (pipeIn != -1) {
 			dup2(pfd[pipeIn][0], 0);
-			close(pfd[pipeIn][1]);
+			if(close(pfd[pipeIn][1]) == -1)
+				syserror("Could not close file descriptor");
 		}
 
 		if (pipeOut != -1) {
 			dup2(pfd[pipeOut][1], 1);
-			close(pfd[pipeOut][0]);
+			//close(pfd[pipeOut][0]);
+			if(close(pfd[pipeOut][0]) == -1)
+				syserror("Could not close file descriptor");
 		}
 
 		for (int i = 0; i < len; i++) {
 			if (i == pipeIn || i == pipeOut) continue;
-			close(pfd[i][0]);
-			close(pfd[i][1]);
+			//close(pfd[i][0]);
+			//close(pfd[i][1]);
+			if(close(pfd[i][0]) == -1 || close(pfd[i][1]) == -1)
+				syserror("Could not close file descriptors");
 		}
 		execvp(*line_words, line_words);
+		syserror( "Could not exec command line" );
 	}
 }
 
@@ -151,8 +169,10 @@ int main() {
         }
 
         for (int i = 0; i < num_words - 1; i++) {
-			close(pfd[i][0]);
-			close(pfd[i][1]);
+			//close(pfd[i][0]);
+			//close(pfd[i][1]);
+			if(close(pfd[i][0]) == -1 || close(pfd[i][1]) == -1)
+				syserror("Could not close file descriptors");
         }
     }
 
