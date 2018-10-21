@@ -23,19 +23,6 @@
   SOFTWARE.
 */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <ctype.h>
-#include "constants.h"
-#include "parsetools.h"
-
 /* 
  * If using the -std-c99 option, then features.h (which is implicitly included
  * by unistd.h) will NOT default to setting _BSD_SOURCE in such a way that the
@@ -44,17 +31,38 @@
  */
 #define _DEFAULT_SOURCE
 
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <fcntl.h>
+#include <linux/limits.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <ctype.h>
+#include "constants.h"
+#include "parsetools.h"
+
 // Function Prototypes
+void shellPrompt();
 void syserror(const char*);
-int parseRedirection(char*, int*, int*);
 void runProcess(char*, int, int, int (*)[2], int);
+int parseRedirection(char*, int*, int*);
+
+// Globals for shell prompt
+char* user; 
+char host[_SC_HOST_NAME_MAX];
 
 int main() {
 	
     char line[MAX_LINE_CHARS];
     char* line_words[MAX_LINE_WORDS + 1];
 
-    while( fgets(line, MAX_LINE_CHARS, stdin) ) {
+	shellPrompt();
+
+	while(fgets(line, MAX_LINE_CHARS, stdin)) {
 
 		// Hacker Lvl 3000, not sophisticated but it works
 		for(int i = 0; i < strlen(line); ++i) {
@@ -73,13 +81,18 @@ int main() {
 			int pipeOut = i == num_words - 1 ? -1 : i;
 			runProcess(line_words[i], pipeIn, pipeOut, pfd, num_words - 1);
         }
-
 		for (int i = 0; i < num_words - 1; i++) {
 			if(close(pfd[i][0]) == -1 || close(pfd[i][1]) == -1)
 				syserror("Could not close file descriptors");
 		}
 	}
 	return 0;
+}
+
+void shellPrompt() {
+    user = getlogin();
+    gethostname(host, _SC_HOST_NAME_MAX);
+    fprintf(stdout, "[%s@%s] ", user, host);
 }
 
 void syserror(const char *s) {
