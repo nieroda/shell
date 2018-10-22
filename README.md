@@ -60,6 +60,15 @@ who 2>[filename] 1>&2
 who > [filename] 2>&1
 ```
 
+Testing
+-----
+
+To run provided unit tests run
+```
+make
+./test
+```
+
 Misc
 -----
 
