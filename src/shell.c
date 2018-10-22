@@ -141,17 +141,22 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 #ifdef EXTRACREDIT
 		else {
 			input_fd = (int) *(linePtr - 1) - '0';
-			if (isalpha(*(linePtr + 1))/* && (*(linePtr + 1) != '&')*/)
+			printf("input_fd: %d\n", input_fd);
+			if ((linePtr + 1) != '&') {
 				fileName = strtok(linePtr + 1, " \t\n");
-			else
+			}
+			else {
 				output_fd = (int) *(linePtr + 2) - '0';
+				printf("output_fd: %d\n", output_fd);
+			}
 		}
-	
+		
 		if (output_fd != -1 && input_fd != -1) {
 			goto done;
 		}
-
+		
 		value = fileName != NULL ? fileName : strtok(linePtr + 1, " \t\n");
+		printf("filename: %s\n", value);
 #else
 		value = strtok(linePtr + 1, " \t\n");
 #endif
@@ -168,20 +173,20 @@ int parseRedirection(char *line, int *pipeIn, int *pipeOut) {
 #else
 		dup2(fd, 1);
 #endif
- 		if(close(fd) == -1)
+		if(close(fd) == -1)
 			syserror("Could not close file descriptor");
 		*pipeOut = -1;
 	}
 	free(lineCopy);
 
-	return fd != 0 ? 1 : 0;
+	return fd != 0 ? 1 : 0; 
 #ifdef EXTRACREDIT
  done:
 	free(lineCopy);
-	dup2(input_fd, output_fd);
+	dup2(output_fd, input_fd);
 	//close(input_fd);
-	//if(close(fd) == -1)
-	//	syserror("Could not close file descriptor");
+	if(close(input_fd) == -1)
+		syserror("Could not close file descriptor");
 	return 2;
 #endif
 }
